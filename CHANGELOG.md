@@ -7,6 +7,9 @@ the release.
 
 ## Unreleased
 
+* [accounting] Continue checkout traces when consuming Kafka order messages and
+  start the `order-consumed` activity after the message is received
+  ([#3610](https://github.com/open-telemetry/opentelemetry-demo/pull/3610))
 * [opamp-server] Bump `OPAMP_GO_REF` to pick up example-server UI improvements
   from `opamp-go` (improved agent list, agent uptime on the agent page, and
   startup logging of the OpAMP/admin UI addresses).
