@@ -7,6 +7,11 @@ the release.
 
 ## Unreleased
 
+* [observer-collector] Add an observer collector, managed by the OpAMP
+  Supervisor, that receives the main collector's own (self) telemetry (metrics
+  and logs) and forwards it to the observability backends. The main collector's
+  self-telemetry host is configurable and defaults to the collector itself.
+  ([#3669](https://github.com/open-telemetry/opentelemetry-demo/pull/3669))
 * [opamp-server] Bump `OPAMP_GO_REF` to pick up example-server UI improvements
   from `opamp-go` (improved agent list, agent uptime on the agent page, and
   startup logging of the OpAMP/admin UI addresses).
