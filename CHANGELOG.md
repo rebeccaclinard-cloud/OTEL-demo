@@ -7,6 +7,11 @@ the release.
 
 ## Unreleased
 
+* [cart] Report status to the demo's OpAMP server using the
+  `OpenTelemetry.OpAmp.Client`, demonstrating OpAMP as a control plane for an
+  SDK-instrumented application alongside the Collector. Enabled only when
+  running with the observability stack.
+  ([#3656](https://github.com/open-telemetry/opentelemetry-demo/pull/3656))
 * [opamp-server] Bump `OPAMP_GO_REF` to pick up example-server UI improvements
   from `opamp-go` (improved agent list, agent uptime on the agent page, and
   startup logging of the OpAMP/admin UI addresses).
