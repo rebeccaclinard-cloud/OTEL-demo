@@ -7,6 +7,8 @@ the release.
 
 ## Unreleased
 
+* [grafana] Add service, EventName, and severity filters to the "Events by Name"
+  dashboard.
 * [flagd-ui] Navigate between the `Basic` and `Advanced` tabs with LiveView
   navigation instead of plain links. The plain links triggered a full page
   reload, which tore down the LiveView WebSocket and produced a trace
