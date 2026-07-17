@@ -7,6 +7,11 @@ the release.
 
 ## Unreleased
 
+* [prototype] Add an end-to-end pipeline latency probe: the load generator
+  emits synthetic probe logs (`eventName == synthetic.e2e.probe`) and an
+  OpenSearch ingest pipeline computes ingest-time minus emit-time, visualized
+  by a new "E2E Pipeline Latency" Grafana dashboard.
+  ([#3692](https://github.com/open-telemetry/opentelemetry-demo/pull/3692))
 * [grafana] Add an "Events by Name" dashboard that shows Event volume by
   OpenTelemetry `EventName` (top events and volume over time). A log record
   with an `EventName` is an OpenTelemetry Event.
