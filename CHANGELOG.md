@@ -7,6 +7,11 @@ the release.
 
 ## Unreleased
 
+* [flagd-ui] Fix invalid `-4` Tailwind class on the flag description text in
+  the dashboard. `-4` has no matching utility and is dropped during the
+  build, so the description ended up with no bottom margin; replaced with
+  `mb-4` to match the flag name above it
+  ([#3715](https://github.com/open-telemetry/opentelemetry-demo/issues/3715))
 * [flagd-ui] Navigate between the `Basic` and `Advanced` tabs with LiveView
   navigation instead of plain links. The plain links triggered a full page
   reload, which tore down the LiveView WebSocket and produced a trace
