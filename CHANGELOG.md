@@ -8,7 +8,7 @@ the release.
 ## Unreleased
 
 * [testing] Add an optional Weaver live-check smoke workflow for validating
-  emitted demo trace telemetry against the demo telemetry schema.
+  emitted demo telemetry against the demo telemetry schema.
 * [flagd-ui] Navigate between the `Basic` and `Advanced` tabs with LiveView
   navigation instead of plain links. The plain links triggered a full page
   reload, which tore down the LiveView WebSocket and produced a trace
