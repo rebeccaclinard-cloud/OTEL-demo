@@ -12,6 +12,10 @@ the release.
   reload, which tore down the LiveView WebSocket and produced a trace
   containing a span with a `connection termination` error
   ([#2588](https://github.com/open-telemetry/opentelemetry-demo/issues/2588))
+* [docs] Document the `telemetry-schema` Weaver registry in `AGENTS.md`, so
+  that new instrumentation reuses existing attributes and defines new ones in
+  the schema
+  ([#3248](https://github.com/open-telemetry/opentelemetry-demo/issues/3248))
 * [grafana] Add an "Events by Name" dashboard that shows Event volume by
   OpenTelemetry `EventName` (top events and volume over time). A log record
   with an `EventName` is an OpenTelemetry Event.
