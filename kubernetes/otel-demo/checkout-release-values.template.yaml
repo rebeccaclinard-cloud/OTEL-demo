@@ -1,0 +1,12 @@
+# Copy this file to a temporary location and replace every REPLACE_* value.
+# Do not commit generated release files containing credentials.
+components:
+  checkout:
+    imageOverride:
+      repository: ghcr.io/rebeccaclinard-cloud/otel-demo
+      tag: REPLACE_WITH_FULL_COMMIT_SHA-checkout
+    podAnnotations:
+      resource.opentelemetry.io/deployment.environment.name: eks-demo
+      resource.opentelemetry.io/service.version: REPLACE_WITH_RELEASE_VERSION
+      resource.opentelemetry.io/vcs.ref.head.revision: REPLACE_WITH_FULL_COMMIT_SHA
+      resource.opentelemetry.io/vcs.repository.url.full: https://github.com/rebeccaclinard-cloud/OTEL-demo

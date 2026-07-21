@@ -1,0 +1,66 @@
+# Copyright The OpenTelemetry Authors
+# SPDX-License-Identifier: Apache-2.0
+
+name: Build Port demo checkout image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/revenue-at-risk
+    paths:
+      - .github/workflows/port-demo-checkout-image.yml
+      - src/checkout/**
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  CHECKOUT_IMAGE: ghcr.io/rebeccaclinard-cloud/otel-demo
+
+jobs:
+  test-and-publish:
+    name: Test and publish checkout
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: src/checkout/go.mod
+          cache-dependency-path: src/checkout/go.sum
+
+      - name: Test checkout service
+        working-directory: src/checkout
+        run: go test ./...
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build and publish checkout image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: src/checkout/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.CHECKOUT_IMAGE }}:${{ github.sha }}-checkout
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
