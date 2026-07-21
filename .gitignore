@@ -58,3 +58,5 @@ src/frontend/cypress/screenshots
 src/shipping/target/
 
 !src/currency/build
+# Helm snapshots may contain credentials expanded from Kubernetes Secrets.
+kubernetes/port-demo/current-state/

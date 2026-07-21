@@ -1,0 +1,36 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: otel-demo-eks
+  region: us-east-1
+  tags:
+    project: otel-port-demo
+    environment: interview
+    owner: rebecca
+    managed-by: eksctl
+
+vpc:
+  nat:
+    gateway: Disable
+
+managedNodeGroups:
+  - name: otel-demo-nodes
+    instanceType: t3.xlarge
+    minSize: 1
+    desiredCapacity: 1
+    maxSize: 1
+
+    volumeSize: 30
+    volumeType: gp3
+
+    privateNetworking: false
+
+    labels:
+      workload: otel-demo
+      environment: interview
+
+    tags:
+      project: otel-port-demo
+      environment: interview
+      owner: rebecca
