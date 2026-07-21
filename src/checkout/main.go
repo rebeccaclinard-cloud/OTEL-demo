@@ -70,6 +70,7 @@ import (
 var (
 	logger            *slog.Logger
 	tracer            trace.Tracer
+	businessMetrics   *checkoutBusinessMetrics
 	resource          *sdkresource.Resource
 	initResourcesOnce sync.Once
 )
@@ -189,6 +190,12 @@ func main() {
 	logger = otelslog.NewLogger("checkout")
 	slog.SetDefault(logger)
 
+	var metricsErr error
+	businessMetrics, metricsErr = newCheckoutBusinessMetrics(otel.Meter("checkout.business"))
+	if metricsErr != nil {
+		logger.Error("Failed to initialize checkout business metrics", slog.Any("error", metricsErr))
+	}
+
 	err := runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second))
 	if err != nil {
 		logger.Error((err.Error()))
@@ -304,6 +311,10 @@ func (cs *checkout) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_W
 }
 
 func (cs *checkout) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
+	startedAt := time.Now()
+	cartValueUSD := 0.0
+	retryCount := 0
+
 	span := trace.SpanFromContext(ctx)
 	span.SetAttributes(
 		attribute.String("user.id", req.UserId),
@@ -323,7 +334,14 @@ func (cs *checkout) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (
 
 	var err error
 	defer func() {
-		if err != nil {
+		if businessMetrics != nil {
+			businessMetrics.recordCheckout(ctx, span, checkoutMeasurement{
+				cartValueUSD: cartValueUSD,
+				duration:     time.Since(startedAt),
+				retryCount:   retryCount,
+				failed:       err != nil,
+			})
+		} else if err != nil {
 			span.RecordError(err)
 		}
 	}()
@@ -349,6 +367,7 @@ func (cs *checkout) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (
 		multPrice := money.MultiplySlow(it.Cost, uint32(it.GetItem().GetQuantity()))
 		total = money.Must(money.Sum(total, multPrice))
 	}
+	cartValueUSD = moneyAmountUSD(total)
 
 	txID, err := cs.chargeCard(ctx, total, req.CreditCard)
 	if err != nil {
@@ -381,7 +400,7 @@ func (cs *checkout) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (
 	}
 
 	shippingCostFloat, _ := strconv.ParseFloat(fmt.Sprintf("%d.%02d", prep.shippingCostLocalized.GetUnits(), prep.shippingCostLocalized.GetNanos()/1000000000), 64)
-	totalPriceFloat, _ := strconv.ParseFloat(fmt.Sprintf("%d.%02d", total.GetUnits(), total.GetNanos()/1000000000), 64)
+	totalPriceFloat := cartValueUSD
 
 	span.SetAttributes(
 		attribute.String("demo.order.id", orderID.String()),
