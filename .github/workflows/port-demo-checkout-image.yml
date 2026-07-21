@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - feature/revenue-at-risk
+      - feature/revenue-at-risk-clean
     paths:
       - .github/workflows/port-demo-checkout-image.yml
       - src/checkout/**
