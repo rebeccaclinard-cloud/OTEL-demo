@@ -8,6 +8,25 @@ opentelemetry-collector:
 
     service:
       pipelines:
+        metrics:
+          receivers:
+            - otlp
+            - kafkametrics
+            - spanmetrics
+            - receiver_creator/metrics
+            - hostmetrics
+            - kubeletstats
+            - k8s_cluster
+          processors:
+            - k8sattributes
+            - memory_limiter
+            - resourcedetection
+            - resource
+            - batch
+          exporters:
+            - otlphttp/prometheus
+            - debug
+            - otlp/grafana-alloy
         traces:
           receivers:
             - otlp
