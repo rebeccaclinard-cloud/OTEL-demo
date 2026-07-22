@@ -5,6 +5,13 @@ components:
     imageOverride:
       repository: ghcr.io/rebeccaclinard-cloud/otel-demo
       tag: REPLACE_WITH_FULL_COMMIT_SHA-checkout
+    envOverrides:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://$(OTEL_COLLECTOR_NAME):4318
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: http/protobuf
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: deployment.environment.name=eks-demo,service.version=REPLACE_WITH_RELEASE_VERSION,vcs.ref.head.revision=REPLACE_WITH_FULL_COMMIT_SHA,vcs.repository.url.full=https://github.com/rebeccaclinard-cloud/OTEL-demo
     podAnnotations:
       resource.opentelemetry.io/deployment.environment.name: eks-demo
       resource.opentelemetry.io/service.version: REPLACE_WITH_RELEASE_VERSION
