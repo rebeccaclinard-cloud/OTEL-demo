@@ -36,6 +36,16 @@ The script validates its inputs, preserves the existing Helm release values and
 Grafana trace exporter, deploys the exact checkout image, waits for the rollout,
 and prints the deployed image and release version.
 
+To deploy the controlled degraded release, pass `true` as the third argument:
+
+```bash
+scripts/port-demo/deploy-checkout.sh FULL_COMMIT_SHA revenue-risk-v2 true
+```
+
+When enabled, 30% of checkout attempts are delayed by 2.4 to 3.5 seconds and
+10% fail before the payment-provider call. These outcomes are mutually
+exclusive, and Revenue at Risk continues to use the two-second threshold.
+
 ## Verify release attributes
 
 In Grafana, find a checkout trace and confirm these resource attributes:

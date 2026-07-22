@@ -157,6 +157,7 @@ type checkout struct {
 	emailSvcClient          pb.EmailServiceClient
 	paymentSvcClient        pb.PaymentServiceClient
 	httpClient              *http.Client
+	regression              *checkoutRegression
 }
 
 func main() {
@@ -216,6 +217,11 @@ func main() {
 	tracer = tp.Tracer("checkout")
 
 	svc := new(checkout)
+	svc.regression, err = checkoutRegressionFromEnvironment()
+	if err != nil {
+		logger.Error("Invalid checkout regression configuration", slog.Any("error", err))
+		os.Exit(1)
+	}
 	svc.httpClient = &http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
@@ -368,6 +374,10 @@ func (cs *checkout) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (
 		total = money.Must(money.Sum(total, multPrice))
 	}
 	cartValueUSD = moneyAmountUSD(total)
+
+	if err = cs.regression.apply(ctx, span); err != nil {
+		return nil, status.Errorf(codes.Unavailable, "checkout dependency regression: %v", err)
+	}
 
 	txID, err := cs.chargeCard(ctx, total, req.CreditCard)
 	if err != nil {

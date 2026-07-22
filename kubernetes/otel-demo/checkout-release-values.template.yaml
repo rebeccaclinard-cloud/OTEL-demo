@@ -12,6 +12,16 @@ components:
         value: http/protobuf
       - name: OTEL_RESOURCE_ATTRIBUTES
         value: deployment.environment.name=eks-demo,service.version=REPLACE_WITH_RELEASE_VERSION,vcs.ref.head.revision=REPLACE_WITH_FULL_COMMIT_SHA,vcs.repository.url.full=https://github.com/rebeccaclinard-cloud/OTEL-demo
+      - name: CHECKOUT_REGRESSION_ENABLED
+        value: "REPLACE_WITH_REGRESSION_ENABLED"
+      - name: CHECKOUT_SLOW_RATE_PERCENT
+        value: "30"
+      - name: CHECKOUT_FAILURE_RATE_PERCENT
+        value: "10"
+      - name: CHECKOUT_DELAY_MIN_MS
+        value: "2400"
+      - name: CHECKOUT_DELAY_MAX_MS
+        value: "3500"
     podAnnotations:
       resource.opentelemetry.io/deployment.environment.name: eks-demo
       resource.opentelemetry.io/service.version: REPLACE_WITH_RELEASE_VERSION
