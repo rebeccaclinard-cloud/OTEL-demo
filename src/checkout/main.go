@@ -70,6 +70,7 @@ import (
 var (
 	logger            *slog.Logger
 	tracer            trace.Tracer
+	businessMetrics   *checkoutBusinessMetrics
 	resource          *sdkresource.Resource
 	initResourcesOnce sync.Once
 )
@@ -156,6 +157,7 @@ type checkout struct {
 	emailSvcClient          pb.EmailServiceClient
 	paymentSvcClient        pb.PaymentServiceClient
 	httpClient              *http.Client
+	regression              *checkoutRegression
 }
 
 func main() {
@@ -189,6 +191,12 @@ func main() {
 	logger = otelslog.NewLogger("checkout")
 	slog.SetDefault(logger)
 
+	var metricsErr error
+	businessMetrics, metricsErr = newCheckoutBusinessMetrics(otel.Meter("checkout.business"))
+	if metricsErr != nil {
+		logger.Error("Failed to initialize checkout business metrics", slog.Any("error", metricsErr))
+	}
+
 	err := runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second))
 	if err != nil {
 		logger.Error((err.Error()))
@@ -209,6 +217,11 @@ func main() {
 	tracer = tp.Tracer("checkout")
 
 	svc := new(checkout)
+	svc.regression, err = checkoutRegressionFromEnvironment()
+	if err != nil {
+		logger.Error("Invalid checkout regression configuration", slog.Any("error", err))
+		os.Exit(1)
+	}
 	svc.httpClient = &http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
@@ -304,6 +317,10 @@ func (cs *checkout) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Health_W
 }
 
 func (cs *checkout) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (*pb.PlaceOrderResponse, error) {
+	startedAt := time.Now()
+	cartValueUSD := 0.0
+	retryCount := 0
+
 	span := trace.SpanFromContext(ctx)
 	span.SetAttributes(
 		attribute.String("user.id", req.UserId),
@@ -323,7 +340,14 @@ func (cs *checkout) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (
 
 	var err error
 	defer func() {
-		if err != nil {
+		if businessMetrics != nil {
+			businessMetrics.recordCheckout(ctx, span, checkoutMeasurement{
+				cartValueUSD: cartValueUSD,
+				duration:     time.Since(startedAt),
+				retryCount:   retryCount,
+				failed:       err != nil,
+			})
+		} else if err != nil {
 			span.RecordError(err)
 		}
 	}()
@@ -348,6 +372,11 @@ func (cs *checkout) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (
 	for _, it := range prep.orderItems {
 		multPrice := money.MultiplySlow(it.Cost, uint32(it.GetItem().GetQuantity()))
 		total = money.Must(money.Sum(total, multPrice))
+	}
+	cartValueUSD = moneyAmountUSD(total)
+
+	if err = cs.regression.apply(ctx, span); err != nil {
+		return nil, status.Errorf(codes.Unavailable, "checkout dependency regression: %v", err)
 	}
 
 	txID, err := cs.chargeCard(ctx, total, req.CreditCard)
@@ -381,7 +410,7 @@ func (cs *checkout) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (
 	}
 
 	shippingCostFloat, _ := strconv.ParseFloat(fmt.Sprintf("%d.%02d", prep.shippingCostLocalized.GetUnits(), prep.shippingCostLocalized.GetNanos()/1000000000), 64)
-	totalPriceFloat, _ := strconv.ParseFloat(fmt.Sprintf("%d.%02d", total.GetUnits(), total.GetNanos()/1000000000), 64)
+	totalPriceFloat := cartValueUSD
 
 	span.SetAttributes(
 		attribute.String("demo.order.id", orderID.String()),

@@ -15,9 +15,11 @@ COPY ./src/checkout/genproto/oteldemo/ genproto/oteldemo/
 COPY ./src/checkout/flags/ flags/
 COPY ./src/checkout/kafka/ kafka/
 COPY ./src/checkout/money/ money/
+COPY ./src/checkout/business_telemetry.go business_telemetry.go
+COPY ./src/checkout/checkout_regression.go checkout_regression.go
 COPY ./src/checkout/main.go main.go
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o checkout main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o checkout .
 
 FROM ghcr.io/grpc-ecosystem/grpc-health-probe:v0.4.53@sha256:a732f1b3a737926c2902393809b344c9f293b62f7069dbd0614caebd298b2e8d AS grpc-health-probe
 
